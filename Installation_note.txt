@@ -71,3 +71,304 @@ urlpatterns = [
     path('api/', include(router.urls)),
 ]
 
+python manage.py makemigrations tasks
+python manage.py migrate
+python manage.py runserver
+
+Browser တွင် http://127.0.0.1:8000/api/tasks/ ကို ဖွင့်ပြီး API Response ကြည့်နိုင်မည်။
+
+Create Backend Dockerfile 
+#backend/Dockerfile
+
+# Base Image
+FROM python:3.9
+
+# Working Directory
+WORKDIR /app
+
+# Copy Project Files
+COPY . /app
+
+# Install Dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Expose Port
+EXPOSE 8000
+
+# Start Django Server
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+---------------
+
+ Requirements.txt Generate & Update
+ pip freeze > requirements.txt
+
+
+Cerate docker-compose.yml in Mail Folder 
+-----------
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    restart: always
+------------
+
+✔ Django Backend Install & Setup ပြုလုပ်ခြင်း
+✔ SQLite Database & Task Model Setup
+✔ Serializer, Views, API Routes ပြုလုပ်ခြင်း
+✔ Dockerfile & Docker Compose အသုံးပြုခြင်း
+✔* GitHub Actions CI/CD Setup
+✔* GitHub Repo Push & Automated Deployment
+
+
+Frontend ပိုင်းဆက်လုပ်မယ်။
+=======================
+# frontend/index.html ဆောက်ပါ
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Task Manager</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Simple Task Manager</h1>
+
+        <!-- Add Task Form -->
+        <div class="add-task-form">
+            <input type="text" id="taskTitle" placeholder="Task Title" required>
+            <textarea id="taskDescription" placeholder="Task Description"></textarea>
+            <button onclick="addTask()">Add Task</button>
+        </div>
+
+        <!-- Task List -->
+        <div id="taskList"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+#frontend/style.css ဆောက်ပါ။
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f5f5f5;
+}
+
+.container {
+    width: 80%;
+    max-width: 600px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+}
+
+.add-task-form input,
+.add-task-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+.add-task-form button {
+    width: 100%;
+    padding: 10px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.add-task-form button:hover {
+    background-color: #218838;
+}
+
+#taskList {
+    margin-top: 20px;
+}
+
+.task-item {
+    background-color: #f9f9f9;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+
+#frontend/script.js ဆောက်ပါ
+
+// API Base URL (Django Backend URL)
+const apiUrl = 'http://localhost:8000/api/tasks/';
+
+// Fetch Tasks from Backend
+function fetchTasks() {
+    fetch(apiUrl)
+        .then(response => response.json())
+        .then(tasks => {
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = ''; // Clear previous tasks
+            tasks.forEach(task => {
+                const taskItem = document.createElement('div');
+                taskItem.classList.add('task-item');
+                taskItem.innerHTML = `
+                    <h3>${task.title}</h3>
+                    <p>${task.description}</p>
+                    <p><strong>Completed:</strong> ${task.completed ? 'Yes' : 'No'}</p>
+                `;
+                taskList.appendChild(taskItem);
+            });
+        })
+        .catch(error => console.log('Error fetching tasks:', error));
+}
+
+// Add a New Task (POST Request)
+function addTask() {
+    const title = document.getElementById('taskTitle').value;
+    const description = document.getElementById('taskDescription').value;
+
+    if (!title) {
+        alert("Please enter a task title!");
+        return;
+    }
+
+    const taskData = {
+        title: title,
+        description: description,
+        completed: false
+    };
+
+    fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(taskData)
+    })
+    .then(response => response.json())
+    .then(newTask => {
+        // After adding the task, re-fetch tasks
+        fetchTasks();
+    })
+    .catch(error => console.log('Error adding task:', error));
+
+    // Clear input fields
+    document.getElementById('taskTitle').value = '';
+    document.getElementById('taskDescription').value = '';
+}
+
+// Initial Fetch of Tasks
+fetchTasks();
+
+
+#nginx/nginx.conf 
+
+server {
+    listen 80;
+
+    location / {
+        root /usr/share/nginx/html;
+        index index.html index.htm;
+    }
+
+    location /api/ {
+        proxy_pass http://backend:8000/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+
+# Create Frontend Dockerfile
+
+# Nginx Base Image
+FROM nginx:alpine
+
+# Copy Frontend Files
+COPY . /usr/share/nginx/html
+
+# Expose Port
+EXPOSE 80
+
+
+---------
+# docker-compose.yml က ဒီလို ဖြစ်သွားမယ်။ 
+
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+    restart: always
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: always
+
+  db:
+    image: postgres:alpine
+    environment:
+      POSTGRES_DB: task_manager
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
+
+----------
+
+📢 Frontend ကို ဆက်လုပ်ပြီး ပြီးဆုံးပါပြီ!
+✔ Task Management Form
+✔ Task List View
+✔ API နဲ့ Fetch Data
+✔ Dockerized Frontend
+
+# Database အတွက် Superuser ဆောက်ခြင်း
+python manage.py createsuperuser
+
+username: sharthu
+password: Google31$
+email: mr.sharthu@gmail.com
+
+python manage.py makemigrations
+python manage.py migrate
+
+
+
+

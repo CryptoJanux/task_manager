@@ -1,0 +1,73 @@
+Install Notes
+=============
+sudo apt update && sudo apt install python3 python3-pip python3-venv -y
+mkdir simple-task-manager && cd simple-task-manager
+python3 -m venv venv
+source venv/bin/activate
+
+pip install django djangorestframework
+
+cd backend/
+django-admin startproject task_manager .
+python manage.py startapp tasks
+
+#task_manager/settings.py
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'rest_framework',  # Django REST Framework
+    'tasks',  # Task Management App
+]
+
+
+#tasks/models.py
+from django.db import models
+
+class Task(models.Model):
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    completed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.title
+
+
+python manage.py makemigrations tasks
+python manage.py migrate
+
+Create tasks/serializers.py
+#tasks/serializers.py
+from rest_framework import serializers
+from .models import Task
+
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = '__all__'
+
+#tasks/views.py
+from rest_framework import viewsets
+from .models import Task
+from .serializers import TaskSerializer
+
+class TaskViewSet(viewsets.ModelViewSet):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+
+Create tasks/urls.py
+#tasks/urls.py
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import TaskViewSet
+
+router = DefaultRouter()
+router.register(r'tasks', TaskViewSet)
+
+urlpatterns = [
+    path('api/', include(router.urls)),
+]
+

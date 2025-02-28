@@ -1,0 +1,60 @@
+ငါ့ရဲ့ "Simple Task Manager" Project အတွက် Project Structure က အောက်မှာပါ
+
+simple-task-manager/
+│── backend/                    # Django Backend (REST API)
+│   ├── task_manager/            # Django Project Directory
+│   │   ├── settings.py          # Django Settings
+│   │   ├── urls.py              # URL Routing
+│   │   ├── wsgi.py              # WSGI Application
+│   │   ├── asgi.py              # ASGI Application (Optional)
+│   │
+│   ├── tasks/                   # Django App for Task Management
+│   │   ├── models.py            # Task Model
+│   │   ├── views.py             # API Views
+│   │   ├── serializers.py       # DRF Serializers
+│   │   ├── urls.py              # App-specific URLs
+│   │
+│   ├── manage.py                # Django Management Script
+│   ├── db.sqlite3               # SQLite Database
+│   ├── requirements.txt         # Python Dependencies
+│   ├── Dockerfile               # Backend Dockerfile
+│
+│── frontend/                     # Frontend (HTML, CSS, JavaScript)
+│   ├── index.html                # Main UI (Task List & Add Task Form)
+│   ├── style.css                 # CSS Styling
+│   ├── script.js                 # JavaScript (Fetch API)
+│   ├── Dockerfile                # Frontend Dockerfile
+│
+│── nginx/                         # Nginx Configuration
+│   ├── nginx.conf                 # Reverse Proxy Config
+│
+│── docker-compose.yml             # Docker Compose for Multi-Container Setup
+│── .github/                        # GitHub Actions CI/CD
+│   ├── workflows/
+│       ├── deploy.yml              # CI/CD Pipeline for Deployment
+│
+│── README.md                      # Project Documentation
+
+📌 Backend (Django REST API)
+✅ Tasks API CRUD Operations
+
+GET /api/tasks/ → Task List
+POST /api/tasks/ → Create Task
+PUT /api/tasks/{id}/ → Update Task
+DELETE /api/tasks/{id}/ → Delete Task
+✅ JWT Authentication (Optional)
+✅ Dockerized Django Backend
+
+📌 Frontend (HTML, CSS, JavaScript)
+✅ index.html → UI with Task List & Add Task Form
+✅ script.js → Fetch API for API Calls
+✅ style.css → UI Design
+
+📌 Nginx (Reverse Proxy)
+✅ Serves Frontend at http://localhost:80
+✅ Routes API Requests to Django Backend
+
+📌 Deployment (Docker + GitHub Actions)
+✅ Docker Compose for Multi-Container Setup
+✅ GitHub Actions for CI/CD
+
